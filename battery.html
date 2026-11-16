@@ -142,11 +142,21 @@
     min-height: 0;
   }
   .car-slot {
-    position: relative;
-    width: 62%; aspect-ratio: 16 / 9;
-    border: 1px dashed #3a3f48; border-radius: 12px;
-    display: flex; align-items: center; justify-content: center;
-    color: #4f5560; font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.car-slot model-viewer {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
   }
   /* Placeholder: replace this div's content with your 3D model (canvas, <model-viewer>, or SVG). */
 
@@ -357,7 +367,6 @@
     src="tesla_roadster_2020_compressed.glb"
     alt="3D model of a car"
     camera-controls
-    auto-rotate
     style="width: 100%; height: 400px;">
   </model-viewer></div>
 
