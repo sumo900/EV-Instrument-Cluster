@@ -219,7 +219,14 @@
 
     <section class="hero">
       <!-- 3D MODEL PLACEHOLDER: replace the contents of .car-slot with your car model. -->
-      <div class="car-slot" id="carSlot">Car model placeholder</div>
+      <div class="car-slot" id="carSlot">
+        <model-viewer
+        src="tesla_roadster_2020_compressed.glb"
+        alt="3D model of a car"
+        camera-controls
+        camera-orbit="0deg 75deg 140%">
+        </model-viewer>
+      </div>
 
       <div class="status-card">
         <h3>Battery now</h3>
@@ -276,7 +283,7 @@
 const CONFIG = {
   USER_NAME: "Sumant",
   // Same base as battery.html and the firmware. Replace with your Firebase project URL.
-  FIREBASE_BASE: "https://YOUR-PROJECT-default-rtdb.firebaseio.com/bms",
+  FIREBASE_BASE: "https://ev-bms-sumant-default-rtdb.asia-southeast1.firebasedatabase.app/bms",
   LIVE_POLL_MS: 3000,
   STALE_MS: 8000
 };
@@ -285,9 +292,9 @@ const $ = (id) => document.getElementById(id);
 
 // ==================== GREETING ====================
 function greetingFor(hour) {
-  if (hour >= 22 || hour < 5) return "Up late tonight?";
+  if (hour >= 22 || hour < 5) return "Late night drive?";
   if (hour < 12) return "Good morning. Ready for a drive?";
-  if (hour < 18) return "Good afternoon. How is the pack today?";
+  if (hour < 18) return "Good afternoon. Shall I tun on the AC?";
   return "Good evening. Checking the pack?";
 }
 
