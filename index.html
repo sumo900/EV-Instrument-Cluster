@@ -325,13 +325,19 @@ document.querySelectorAll("[data-soon]").forEach((el) => {
 
 // ==================== LIVE STATUS ====================
 let lastSeenAt = 0;
+let lastUptime = null;
 
 async function pollLive() {
   try {
     const res = await fetch(CONFIG.FIREBASE_BASE + "/live.json?t=" + Date.now(), { cache: "no-store" });
     const d = res.ok ? await res.json() : null;
+
     if (d && typeof d === "object") {
-      lastSeenAt = Date.now();
+      if (d.uptimeMs !== lastUptime) {
+        lastUptime = d.uptimeMs;
+        lastSeenAt = Date.now();
+      }
+
       $("liveVolt").textContent = Number(d.busV).toFixed(2) + " V";
       $("liveState").textContent = d.latched ? "CRITICAL" : (d.state || "--");
       $("liveTemp").innerHTML = d.ntcOk ? Number(d.tempC).toFixed(1) + " °C" : "--";
