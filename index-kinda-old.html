@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #0a0b0d;
+    --panel: #14161a;
+    --panel-2: #1b1e23;
+    --line: #262a31;
+    --text: #e8e9eb;
+    --muted: #8b9099;
+    --accent: #e31937;
+    --ok: #3fb950;
+    --warn: #e3a33b;
+    --crit: #e5484d;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Inter", system-ui, sans-serif;
+  }
+  .material-symbols-rounded {
+    font-family: "Material Symbols Rounded";
+    font-weight: normal; font-style: normal;
+    font-size: 22px; line-height: 1;
+    display: inline-block; white-space: nowrap;
+    -webkit-font-feature-settings: "liga";
+    font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+    user-select: none;
+  }
+
+  .app {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+  }
+
+  /* ---------- sidebar ---------- */
+  .sidebar {
+    border-right: 1px solid var(--line);
+    background: var(--panel);
+    padding: 22px 16px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .brand {
+    display: flex; align-items: center; gap: 10px;
+    font-weight: 600; padding: 6px 10px 20px;
+  }
+  .brand .material-symbols-rounded { color: var(--accent); }
+  .nav-title {
+    font-size: 11px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .08em;
+    padding: 14px 10px 6px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 12px; border-radius: 10px;
+    color: var(--muted); text-decoration: none;
+    font-size: 14px; border: 0; background: none; text-align: left; cursor: pointer;
+    width: 100%;
+  }
+  .nav-item:hover { background: var(--panel-2); color: var(--text); }
+  .nav-item.active { background: var(--panel-2); color: var(--text); }
+  .nav-item .material-symbols-rounded { color: var(--muted); }
+  .nav-item.live .material-symbols-rounded { color: var(--accent); }
+
+  /* ---------- main ---------- */
+  .main {
+    padding: 36px 44px;
+    display: flex; flex-direction: column; gap: 28px;
+  }
+  .greet h1 {
+    font-size: clamp(30px, 4vw, 46px);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  .greet p { color: var(--muted); margin-top: 8px; font-size: 16px; }
+
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    align-items: stretch;
+  }
+
+  /* 3D MODEL PLACEHOLDER. Replace the contents of .car-slot with your car model. */
+  .car-slot {
+    border: 1px dashed #3a3f48;
+    border-radius: 14px;
+    min-height: 260px;
+    display: flex; align-items: center; justify-content: center;
+    color: #4f5560; font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+  }
+
+  .status-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .status-card h3 {
+    font-size: 12px; color: var(--muted); font-weight: 500;
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+  .status-row { display: flex; justify-content: space-between; color: var(--muted); font-size: 14px; }
+  .status-row span:last-child { color: var(--text); font-variant-numeric: tabular-nums; }
+  .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); margin-right: 8px; }
+  .live-dot.ok { background: var(--ok); }
+  .live-dot.lost { background: var(--crit); }
+
+  .menu {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+  .tile {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    display: flex; flex-direction: column; gap: 10px;
+    text-decoration: none; color: var(--text);
+    cursor: pointer;
+    transition: border-color .2s, background .2s;
+    text-align: left;
+    font: inherit;
+  }
+  .tile:hover { border-color: #3a3f48; background: var(--panel-2); }
+  .tile .material-symbols-rounded { color: var(--muted); }
+  .tile.featured { border-color: #3a2a2d; }
+  .tile.featured .material-symbols-rounded { color: var(--accent); }
+  .tile .title { font-weight: 500; }
+  .tile .desc { color: var(--muted); font-size: 13px; line-height: 1.4; }
+
+  .toast {
+    position: fixed; bottom: 28px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--panel-2); border: 1px solid var(--line);
+    color: var(--text); padding: 12px 18px; border-radius: 10px;
+    font-size: 14px; opacity: 0; pointer-events: none;
+    transition: opacity .25s, transform .25s;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 900px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .hero { grid-template-columns: 1fr; }
+    .menu { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="material-symbols-rounded">electric_car</span>
+      Drive Home
+    </div>
+
+    <a class="nav-item active" href="index.html">
+      <span class="material-symbols-rounded">home</span> Home
+    </a>
+    <a class="nav-item live" href="battery.html">
+      <span class="material-symbols-rounded">battery_full</span> Battery
+    </a>
+    <button class="nav-item" data-soon="Trips">
+      <span class="material-symbols-rounded">route</span> Trips
+    </button>
+    <button class="nav-item" data-soon="Charging">
+      <span class="material-symbols-rounded">ev_station</span> Charging
+    </button>
+    <button class="nav-item" data-soon="Energy">
+      <span class="material-symbols-rounded">bolt</span> Energy
+    </button>
+
+    <div class="nav-title">Vehicle</div>
+    <button class="nav-item" data-soon="Climate">
+      <span class="material-symbols-rounded">ac_unit</span> Climate
+    </button>
+    <button class="nav-item" data-soon="Diagnostics">
+      <span class="material-symbols-rounded">troubleshoot</span> Diagnostics
+    </button>
+    <button class="nav-item" data-soon="Schedule">
+      <span class="material-symbols-rounded">schedule</span> Schedule
+    </button>
+
+    <div class="nav-title">System</div>
+    <button class="nav-item" data-soon="Security">
+      <span class="material-symbols-rounded">shield_lock</span> Security
+    </button>
+    <button class="nav-item" data-soon="Settings">
+      <span class="material-symbols-rounded">settings</span> Settings
+    </button>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <main class="main">
+
+    <section class="greet">
+      <h1 id="greeting">Hi Sumant</h1>
+      <p id="subline">Loading</p>
+    </section>
+
+    <section class="hero">
+      <!-- 3D MODEL PLACEHOLDER: replace the contents of .car-slot with your car model. -->
+      <div class="car-slot" id="carSlot">
+        <model-viewer
+        src="tesla_roadster_2020_compressed.glb"
+        alt="3D model of a car"
+        camera-controls
+        camera-orbit="0deg 75deg 140%">
+        </model-viewer>
+      </div>
+
+      <div class="status-card">
+        <h3>Battery now</h3>
+        <div class="status-row"><span><span class="live-dot" id="liveDot"></span>Link</span><span id="linkText">waiting</span></div>
+        <div class="status-row"><span>Pack voltage</span><span id="liveVolt">--.-- V</span></div>
+        <div class="status-row"><span>State</span><span id="liveState">--</span></div>
+        <div class="status-row"><span>Cell temperature</span><span id="liveTemp">--.- &deg;C</span></div>
+        <a class="nav-item live" href="battery.html" style="margin-top:6px;padding:0;">
+          <span class="material-symbols-rounded">arrow_forward</span> Open battery page
+        </a>
+      </div>
+    </section>
+
+    <section class="menu">
+      <a class="tile featured" href="battery.html">
+        <span class="material-symbols-rounded">battery_full</span>
+        <span class="title">Battery</span>
+        <span class="desc">Pack voltage, current, temperature and circuit control.</span>
+      </a>
+      <button class="tile" data-soon="Trips">
+        <span class="material-symbols-rounded">route</span>
+        <span class="title">Trips</span>
+        <span class="desc">Recent drives, range and efficiency.</span>
+      </button>
+      <button class="tile" data-soon="Charging">
+        <span class="material-symbols-rounded">ev_station</span>
+        <span class="title">Charging</span>
+        <span class="desc">Charge schedule and charger status.</span>
+      </button>
+      <button class="tile" data-soon="Climate">
+        <span class="material-symbols-rounded">ac_unit</span>
+        <span class="title">Climate</span>
+        <span class="desc">Cabin temperature and preconditioning.</span>
+      </button>
+      <button class="tile" data-soon="Diagnostics">
+        <span class="material-symbols-rounded">troubleshoot</span>
+        <span class="title">Diagnostics</span>
+        <span class="desc">System health and service reminders.</span>
+      </button>
+      <button class="tile" data-soon="Settings">
+        <span class="material-symbols-rounded">settings</span>
+        <span class="title">Settings</span>
+        <span class="desc">Display, units and driver profiles.</span>
+      </button>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast">Not available in this demo</div>
+
+<script>
+// ==================== CONFIG ====================
+const CONFIG = {
+  USER_NAME: "Sumant",
+  // Same base as battery.html and the firmware. Replace with your Firebase project URL.
+  FIREBASE_BASE: "https://ev-bms-sumant-default-rtdb.asia-southeast1.firebasedatabase.app/bms",
+  LIVE_POLL_MS: 3000,
+  STALE_MS: 8000
+};
+
+const $ = (id) => document.getElementById(id);
+
+// ==================== GREETING ====================
+function greetingFor(hour) {
+  if (hour >= 22 || hour < 5) return "Late night drive?";
+  if (hour < 12) return "Good morning. Ready for a drive?";
+  if (hour < 18) return "Good afternoon. Shall I tun on the AC?";
+  return "Good evening. Checking the pack?";
+}
+
+function setGreeting() {
+  const now = new Date();
+  $("greeting").textContent = "Hi " + CONFIG.USER_NAME;
+  $("subline").textContent = greetingFor(now.getHours());
+}
+setGreeting();
+setInterval(setGreeting, 60 * 1000);
+
+// ==================== "COMING SOON" MENU ====================
+const toast = $("toast");
+let toastTimer = null;
+
+function showToast(text) {
+  toast.textContent = text;
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove("show"), 1800);
+}
+
+document.querySelectorAll("[data-soon]").forEach((el) => {
+  el.addEventListener("click", () => {
+    showToast(el.dataset.soon + " is not available in this demo");
+  });
+});
+
+// ==================== LIVE STATUS ====================
+let lastSeenAt = 0;
+let lastUptime = null;
+
+async function pollLive() {
+  try {
+    const res = await fetch(CONFIG.FIREBASE_BASE + "/live.json?t=" + Date.now(), { cache: "no-store" });
+    const d = res.ok ? await res.json() : null;
+
+    if (d && typeof d === "object") {
+      if (d.uptimeMs !== lastUptime) {
+        lastUptime = d.uptimeMs;
+        lastSeenAt = Date.now();
+      }
+
+      $("liveVolt").textContent = Number(d.busV).toFixed(2) + " V";
+      $("liveState").textContent = d.latched ? "CRITICAL" : (d.state || "--");
+      $("liveTemp").innerHTML = d.ntcOk ? Number(d.tempC).toFixed(1) + " °C" : "--";
+    }
+  } catch (e) {
+    // keep the last values on screen
+  }
+
+  const stale = !lastSeenAt || Date.now() - lastSeenAt > CONFIG.STALE_MS;
+  $("liveDot").className = "live-dot " + (stale ? "lost" : "ok");
+  $("linkText").textContent = stale ? "no data" : "live";
+}
+
+setInterval(pollLive, CONFIG.LIVE_POLL_MS);
+pollLive();
+</script>
+</body>
+</html>

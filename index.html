@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Home</title>
 
@@ -10,6 +9,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0&display=swap" rel="stylesheet">
+
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
 
 <style>
   :root {
@@ -95,13 +96,30 @@
     align-items: stretch;
   }
 
-  /* 3D MODEL PLACEHOLDER. Replace the contents of .car-slot with your car model. */
-  .car-slot {
-    border: 1px dashed #3a3f48;
+  /* Car viewer */
+  .car-wrap {
+    position: relative;
+    min-height: 320px;
+    border: 1px solid var(--line);
     border-radius: 14px;
-    min-height: 260px;
-    display: flex; align-items: center; justify-content: center;
-    color: #4f5560; font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+    overflow: hidden;
+    background: var(--panel);
+  }
+  .car-slot {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    border: none;
+    border-radius: 0;
+    z-index: 0;
+  }
+  .car-slot model-viewer {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
   }
 
   .status-card {
@@ -120,6 +138,11 @@
   .live-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); margin-right: 8px; }
   .live-dot.ok { background: var(--ok); }
   .live-dot.lost { background: var(--crit); }
+  .open-link {
+    margin-top: 6px; display: inline-flex; gap: 8px; align-items: center;
+    color: var(--text); text-decoration: none; font-size: 14px;
+  }
+  .open-link .material-symbols-rounded { color: var(--accent); }
 
   .menu {
     display: grid;
@@ -219,14 +242,15 @@
     </section>
 
     <section class="hero">
-      <!-- 3D MODEL PLACEHOLDER: replace the contents of .car-slot with your car model. -->
-      <div class="car-slot" id="carSlot">
-        <model-viewer
-        src="tesla_roadster_2020_compressed.glb"
-        alt="3D model of a car"
-        camera-controls
-        camera-orbit="0deg 75deg 140%">
-        </model-viewer>
+      <div class="car-wrap">
+        <div class="car-slot" id="carSlot">
+          <model-viewer
+            src="tesla_roadster_2020_compressed.glb"
+            alt="3D model of a car"
+            camera-controls
+            camera-orbit="0deg 75deg 140%">
+          </model-viewer>
+        </div>
       </div>
 
       <div class="status-card">
@@ -235,7 +259,7 @@
         <div class="status-row"><span>Pack voltage</span><span id="liveVolt">--.-- V</span></div>
         <div class="status-row"><span>State</span><span id="liveState">--</span></div>
         <div class="status-row"><span>Cell temperature</span><span id="liveTemp">--.- &deg;C</span></div>
-        <a class="nav-item live" href="battery.html" style="margin-top:6px;padding:0;">
+        <a class="open-link" href="battery.html">
           <span class="material-symbols-rounded">arrow_forward</span> Open battery page
         </a>
       </div>
@@ -283,7 +307,6 @@
 // ==================== CONFIG ====================
 const CONFIG = {
   USER_NAME: "Sumant",
-  // Same base as battery.html and the firmware. Replace with your Firebase project URL.
   FIREBASE_BASE: "https://ev-bms-sumant-default-rtdb.asia-southeast1.firebasedatabase.app/bms",
   LIVE_POLL_MS: 3000,
   STALE_MS: 8000
@@ -293,9 +316,9 @@ const $ = (id) => document.getElementById(id);
 
 // ==================== GREETING ====================
 function greetingFor(hour) {
-  if (hour >= 22 || hour < 5) return "Late night drive?";
+  if (hour >= 22 || hour < 5) return "Up late tonight?";
   if (hour < 12) return "Good morning. Ready for a drive?";
-  if (hour < 18) return "Good afternoon. Shall I tun on the AC?";
+  if (hour < 18) return "Good afternoon. How is the pack today?";
   return "Good evening. Checking the pack?";
 }
 
@@ -325,8 +348,22 @@ document.querySelectorAll("[data-soon]").forEach((el) => {
 });
 
 // ==================== LIVE STATUS ====================
+// Firebase keeps the last value even after the board goes offline,
+// so a reading only counts as fresh when the board's uptime changes.
 let lastSeenAt = 0;
 let lastUptime = null;
+
+function showValues(d) {
+  $("liveVolt").textContent = Number(d.busV).toFixed(2) + " V";
+  $("liveState").textContent = d.latched ? "CRITICAL" : (d.state || "--");
+  $("liveTemp").textContent = d.ntcOk ? Number(d.tempC).toFixed(1) + " °C" : "--";
+}
+
+function clearValues() {
+  $("liveVolt").textContent = "--.-- V";
+  $("liveState").textContent = "UNKNOWN";
+  $("liveTemp").textContent = "--.- °C";
+}
 
 async function pollLive() {
   try {
@@ -338,18 +375,16 @@ async function pollLive() {
         lastUptime = d.uptimeMs;
         lastSeenAt = Date.now();
       }
-
-      $("liveVolt").textContent = Number(d.busV).toFixed(2) + " V";
-      $("liveState").textContent = d.latched ? "CRITICAL" : (d.state || "--");
-      $("liveTemp").innerHTML = d.ntcOk ? Number(d.tempC).toFixed(1) + " °C" : "--";
+      showValues(d);
     }
   } catch (e) {
-    // keep the last values on screen
+    // network error: the staleness check below handles it
   }
 
   const stale = !lastSeenAt || Date.now() - lastSeenAt > CONFIG.STALE_MS;
   $("liveDot").className = "live-dot " + (stale ? "lost" : "ok");
   $("linkText").textContent = stale ? "no data" : "live";
+  if (stale && lastSeenAt) clearValues();
 }
 
 setInterval(pollLive, CONFIG.LIVE_POLL_MS);
