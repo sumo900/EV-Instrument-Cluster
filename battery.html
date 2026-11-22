@@ -726,10 +726,18 @@ updateControlUI();
 // ==================== POLLING ====================
 async function poll() {
   const data = await fetchTelemetry();
-  if (data) {
-    latest = data;
+  let lastSeenAt = 0;          // ms timestamp of last valid telemetry
+  let latest = null;           // last telemetry object
+  let lastUptime = null;
+  
+// after the fetch:
+if (data && typeof data === "object") {
+  if (data.uptimeMs !== lastUptime) {   // only a new device push counts as fresh
+    lastUptime = data.uptimeMs;
     lastSeenAt = Date.now();
   }
+  latest = data;
+}
   const age = lastSeenAt ? (Date.now() - lastSeenAt) : Infinity;
   const stale = age > CONFIG.STALE_MS;
 
