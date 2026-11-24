@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pack Monitor</title>
-<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -141,36 +141,20 @@
     display: flex; align-items: center; justify-content: center;
     min-height: 0;
   }
- .car-slot {
-  position: absolute;
-  inset: 0;
-  width: auto;
-  height: auto;
-  border: none;
-  border-radius: 0;
-  z-index: 0;
-}
-
-.car-slot model-viewer {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-}
+  .car-slot {
+    position: relative;
+    width: 62%; aspect-ratio: 16 / 9;
+    border: 1px dashed #3a3f48; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    color: #4f5560; font-size: 12px; letter-spacing: .06em; text-transform: uppercase;
+  }
   /* Placeholder: replace this div's content with your 3D model (canvas, <model-viewer>, or SVG). */
 
   .callout {
-  position: absolute;
-  z-index: 1;
-  white-space: nowrap;
-  padding: 6px 8px;
-  border-radius: 6px;
-  background: rgba(10, 11, 13, .75);
-  font-size: 12px;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
+    position: absolute;
+    font-size: 12px; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
   .callout b { display: block; color: var(--text); font-size: 16px; font-weight: 500; margin-top: 2px; }
   .callout.tl { left: 14%; top: 22%; }
   .callout.tr { right: 14%; top: 14%; text-align: right; }
@@ -369,14 +353,8 @@
     <!-- Center: car placeholder and live callouts -->
     <main class="center">
       <!-- 3D MODEL PLACEHOLDER. Replace the contents of .car-slot with your model. -->
-      <div class="car-slot" id="carSlot">
-  <model-viewer
-    src="tesla_roadster_2020_compressed.glb"
-    alt="3D model of a car"
-    camera-controls
-    camera-orbit="0deg 75deg 140%">
-  </model-viewer>
-</div>
+      <div class="car-slot" id="carSlot">3D model placeholder</div>
+
       <div class="callout tl">
         <span class="material-symbols-rounded">lock</span>
         Pack voltage
@@ -671,6 +649,7 @@ function render(d, stale) {
 let cmdEnabled = false;
 let cmdDuty = 0;
 let cmdLocked = false;   // mirrors the board's latch
+let cmdSeq = 0;          // small counter, so the board can store it as a 32-bit integer
 
 const toggleBtn = $("cmdToggle");
 const slider = $("cmdSlider");
@@ -685,8 +664,9 @@ function updateControlUI() {
 }
 
 async function sendCommand() {
-  // seq is the current time, so it changes on every send. The board uses that as a heartbeat.
-  const body = JSON.stringify({ enabled: cmdEnabled, duty: cmdDuty, seq: Date.now() });
+  // seq increases on every send. The board treats a changing seq as a heartbeat.
+  cmdSeq++;
+  const body = JSON.stringify({ enabled: cmdEnabled, duty: cmdDuty, seq: cmdSeq });
   try {
     const res = await fetch(CONFIG.FIREBASE_BASE + "/cmd.json", {
       method: "PUT",
@@ -724,20 +704,19 @@ function syncControls(d) {
 updateControlUI();
 
 // ==================== POLLING ====================
+let lastUptime = null;
+
 async function poll() {
   const data = await fetchTelemetry();
-  let lastSeenAt = 0;          // ms timestamp of last valid telemetry
-  let latest = null;           // last telemetry object
-  let lastUptime = null;
-  
-// after the fetch:
-if (data && typeof data === "object") {
-  if (data.uptimeMs !== lastUptime) {   // only a new device push counts as fresh
-    lastUptime = data.uptimeMs;
-    lastSeenAt = Date.now();
+  if (data) {
+    latest = data;
+    // Firebase keeps the last value even when the board is off, so only a
+    // changing uptime counts as a fresh reading.
+    if (data.uptimeMs !== lastUptime) {
+      lastUptime = data.uptimeMs;
+      lastSeenAt = Date.now();
+    }
   }
-  latest = data;
-}
   const age = lastSeenAt ? (Date.now() - lastSeenAt) : Infinity;
   const stale = age > CONFIG.STALE_MS;
 
